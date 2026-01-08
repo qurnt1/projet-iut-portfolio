@@ -238,37 +238,52 @@ def search_portfolio(query: str) -> str:
     finally:
         time.sleep(1)
         status_container.empty()
+
 def prune_agent_memory(agent, limit=6):
     """
-    Réduit l'historique interne de l'agent pour ne garder que les N derniers messages.
-    Préserve le message système (instruction initiale).
+    Nettoie la mémoire en s'assurant de ne pas casser les paires question/outil.
     """
     try:
-        # On tente d'accéder à la liste des messages (standard dans la plupart des libs Agent)
-        messages_list = None
+        # 1. Récupération des messages
+        messages = None
         if hasattr(agent, "messages"):
-            messages_list = agent.messages
+            messages = agent.messages
         elif hasattr(agent, "memory") and hasattr(agent.memory, "messages"):
-            messages_list = agent.memory.messages
+            messages = agent.memory.messages
             
-        if messages_list is not None and isinstance(messages_list, list):
-            if len(messages_list) > limit:
-                # Identification du System Prompt (souvent à l'index 0)
-                sys_msg = messages_list[0] if messages_list and messages_list[0].get("role") == "system" else None
-                
-                # On garde les 'limit' derniers messages
-                kept_msgs = messages_list[-limit:]
-                
-                # Reconstitution : System Prompt + Derniers messages
-                new_history = [sys_msg] + kept_msgs if sys_msg else kept_msgs
-                
-                # Réaffectation
-                if hasattr(agent, "messages"):
-                    agent.messages = new_history
-                elif hasattr(agent, "memory"):
-                    agent.memory.messages = new_history
+        if not messages:
+            return
+
+        # 2. On isole le System Prompt (toujours index 0)
+        sys_msg = messages[0] if messages and messages[0].get("role") == "system" else None
+        
+        # 3. On prend les 'limit' derniers messages du reste
+        # On exclut le system prompt du slicing pour le remettre après
+        history = messages[1:] if sys_msg else messages
+        kept_msgs = history[-limit:]
+
+        # --- CORRECTION CRITIQUE (SANITIZATION) ---
+        # Si le premier message conservé est une réponse d'outil ("tool") ou un résultat,
+        # mais qu'on a effacé la demande de l'assistant juste avant, Groq va planter.
+        # Donc, si le premier message est un "tool", on le vire.
+        while kept_msgs and kept_msgs[0].get("role") == "tool":
+            kept_msgs.pop(0)
+            
+        # Idem, si le premier message est un assistant qui appelle un outil, 
+        # mais qu'on a pas l'outil précédent (cas rare mais possible), on nettoie.
+        # Pour Llama 3, on s'assure juste que le premier message n'est pas orphelin.
+        
+        # 4. Reconstitution
+        new_history = [sys_msg] + kept_msgs if sys_msg else kept_msgs
+        
+        # 5. Application
+        if hasattr(agent, "messages"):
+            agent.messages = new_history
+        elif hasattr(agent, "memory"):
+            agent.memory.messages = new_history
+            
     except Exception as e:
-        print(f"Warning: Impossible de nettoyer la mémoire de l'agent: {e}")
+        print(f"Warning prune: {e}")
 
 def initialize_resources():
     # Init Upstash
@@ -293,9 +308,15 @@ def initialize_resources():
             try:
                 sys_prompt = """Tu es l'assistant professionnel de Quentin Chabot.
                 Ton objectif : Convaincre le recruteur par des faits précis issus du contexte.
-                RÈGLE ABSOLUE : Tu DOIS utiliser l'outil `search_portfolio` si la question porte sur le parcours, les études ou les compétences de Quentin.
-                Ne réponds jamais "de tête" sur son parcours. Utilise l'outil.
-                Sois synthétique et professionnel."""
+
+                RÈGLES D'AFFICHAGE :
+                - Ne cite JAMAIS les sources, noms d'outils ou numéros de lignes dans ta réponse finale (ex: ne mets pas [search_portfolio], [L12-14]).
+                - Intègre les informations naturellement dans le texte sans balises techniques.
+
+                INSTRUCTIONS :
+                - Si la question porte sur le parcours, les études ou les compétences, utilise l'outil search_portfolio pour trouver la réponse.
+                - Ne réponds jamais "de tête" sur son parcours. Utilise l'outil.
+                - Sois synthétique et professionnel."""
                 
                 st.session_state.agent = Agent(
                     name="QuentinAI",
@@ -464,7 +485,7 @@ def main():
     # 4. Affichage du bloc Contact (Si seuil atteint)
     if show_contact:
         st.divider()
-        st.markdown("<h4 style='text-align: center;'>Passons au réel</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Passons au réel,</h4>", unsafe_allow_html=True)
         st.info("L'IA c'est bien, l'humain c'est mieux. Retrouvez-moi sur mes canaux professionnels.")
         
         c1, c2 = st.columns(2)
@@ -483,6 +504,9 @@ def main():
     # TRAITEMENT DE LA RÉPONSE
     # ---------------------------------------------------------
     # On a retiré la condition "and not should_lock"
+    # ---------------------------------------------------------
+    # TRAITEMENT DE LA RÉPONSE (AVEC RETRY AUTOMATIQUE)
+    # ---------------------------------------------------------
     if prompt_to_process:
         
         # A. Ajout message user
@@ -496,26 +520,67 @@ def main():
             placeholder = st.empty()
             full_res = ""
             
-            if st.session_state.get("groq_status") and st.session_state.get("upstash_status"):
-                with st.spinner("Analyse de la demande en cours..."):
-                    try:
-                        prune_agent_memory(st.session_state.agent, MEMORY_WINDOW)
-                        raw_res = st.session_state.agent.run(prompt_to_process).get_text()
-                    except Exception as e:
-                        raw_res = f"Une erreur est survenue lors du traitement : {e}"
-            elif not st.session_state.get("groq_status"):
-                 raw_res = "⚠️ Le service d'intelligence artificielle (Groq) n'est pas connecté. Impossible de répondre."
+            # Vérification des services
+            if not st.session_state.get("groq_status"):
+                full_res = "⚠️ Le service d'intelligence artificielle (Groq) n'est pas connecté."
             elif not st.session_state.get("upstash_status"):
-                 raw_res = "⚠️ La base de connaissances (Upstash) est inaccessible. Je ne peux pas accéder à mon parcours."
+                full_res = "⚠️ La base de connaissances (Upstash) est inaccessible."
+            else:
+                # --- LOGIQUE DE RETRY ---
+                max_retries = 3
+                success = False
+                
+                with st.spinner("Analyse en cours..."):
+                    for attempt in range(max_retries):
+                        try:
+                            # 1. Nettoyage préventif de l'historique
+                            prune_agent_memory(st.session_state.agent, MEMORY_WINDOW)
+                            
+                            # 2. Tentative d'exécution
+                            raw_res = st.session_state.agent.run(prompt_to_process).get_text()
+                            success = True
+                            break # Si ça passe, on sort de la boucle
+                            
+                        except Exception as e:
+                            error_msg = str(e)
+                            print(f"⚠️ Tentative {attempt+1}/{max_retries} échouée : {error_msg}")
+                            
+                            # Si c'est l'erreur spécifique de Groq sur les Tools ou le templating
+                            if "Tools should have a name" in error_msg or "HarmonyError" in error_msg:
+                                # STRATÉGIE DE RÉPARATION : On reset la mémoire de l'agent pour cette requête
+                                # On garde le prompt système, mais on vide l'historique corrompu
+                                if hasattr(st.session_state.agent, "memory"):
+                                    st.session_state.agent.memory.messages = [] 
+                                elif hasattr(st.session_state.agent, "messages"):
+                                    # On garde juste le system prompt s'il existe
+                                    sys_msg = st.session_state.agent.messages[0] if st.session_state.agent.messages else None
+                                    st.session_state.agent.messages = [sys_msg] if sys_msg else []
+                                
+                                # On attend un peu avant de réessayer
+                                time.sleep(1)
+                            else:
+                                # Pour les autres erreurs, on attend juste
+                                time.sleep(1)
 
-            # Streaming
-            for chunk in stream_text(raw_res):
-                full_res += chunk
-                placeholder.markdown(full_res + "▌")
-            placeholder.markdown(full_res)
+                    if not success:
+                        full_res = "Une erreur technique persistante empêche la réponse. Veuillez reformuler ou rafraîchir la page."
+                    else:
+                        full_res = raw_res
+
+            # Affichage du résultat final (ou de l'erreur)
+            # Streaming simulé pour l'effet visuel si succès
+            if success:
+                temp_text = ""
+                for chunk in stream_text(full_res):
+                    temp_text += chunk
+                    placeholder.markdown(temp_text + "▌")
+                placeholder.markdown(full_res)
+            else:
+                placeholder.error(full_res)
             
             st.session_state.messages.append({"role": "assistant", "content": full_res})
         
+        # Petit délai pour laisser l'UI se mettre à jour avant le rerun
         time.sleep(0.5)
         st.rerun()
 

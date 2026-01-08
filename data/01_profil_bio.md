@@ -35,6 +35,7 @@ Je recherche une entreprise, idéalement dans le **secteur de la finance**, capa
 * **Sports de compétition** : Tennis (8 ans) et Badminton. Développement de la réactivité stratégique et de la persévérance.
 * **Loisirs Techniques** : La pêche (patience et analyse de l'environnement) et le développement de projets Open Source (veille technologique active).
 
+* **Personnel** : J'ai 20 ans et je vis a niort
 ## Coordonnées et Présence en Ligne
 
 * **Email** : quentin.chabot@etu.univ-poitiers.fr
