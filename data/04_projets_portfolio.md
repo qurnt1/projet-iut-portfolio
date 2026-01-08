@@ -1,33 +1,39 @@
 # Portfolio de Projets Techniques
 
-## LOL MAIN - Assistant d'Automatisation (Projet Personnel)
-* **Type** : Développement Logiciel / Ingénierie
-* **Objectif** : Création d'une alternative légère et respectueuse de la vie privée aux overlays gaming (type Overwolf).
+## Assistant d'Automatisation Temps Réel "LCU" (Projet Personnel)
+
+* **Type** : Ingénierie Logicielle / Open Source
+* **Contexte** : Développement d'une alternative "Privacy-First" aux solutions commerciales d'overlays de jeu, nécessitant une haute performance.
 * **Architecture Technique** :
-    * **Langage** : Python (Architecture événementielle et asynchrone avec `asyncio`).
-    * **Connexion API** : Interaction directe avec la **LCU API** (League Client Update) locale, sans scraping ni télémétrie externe.
-    * **Interface (GUI)** : Utilisation de `ttkbootstrap` pour une empreinte mémoire minimale.
-    * **Distribution** : Compilation en `.exe` via **PyInstaller** et orchestration via script Batch.
-* **Fonctionnalités** :
-    * Automatisation des phases de lobby (Acceptation, Auto-Pick, Auto-Ban).
-    * Intégration de raccourcis globaux pour l'affichage de statistiques.
-* **Compétences Démontrées** : Gestion de flux temps réel, optimisation CPU/RAM, déploiement d'exécutables autonomes.
-* **Liens** : https://github.com/qurnt1/main_lol_2.git
+* **Langage** : **Python** (Programmation asynchrone avec `asyncio` et `aiohttp`).
+* **API & Backend** : Reverse engineering et interaction directe avec l'API locale non documentée (LCU API) via requêtes HTTPS sécurisées.
+* **Optimisation** : Utilisation de `ttkbootstrap` pour garantir une empreinte mémoire minimale (<50Mo RAM) et une réactivité immédiate.
+* **DevOps** : Pipeline de build automatisé avec **PyInstaller** pour la distribution d'un exécutable unique (.exe).
 
-## Application de Pilotage de Flux (Projet Groupama)
-* **Type** : Outil Métier / Automatisation
-* **Problème** : Consolidation manuelle inefficace de multiples fichiers Excel pour le suivi d'activité des collaborateurs.
-* **Solution Technique** :
-    * Développement d'une **application Desktop autonome** en Python.
-    * **GUI** : Interface moderne développée avec **CustomTkinter**.
-    * **Backend** : Centralisation des données dans des fichiers CSV structurés par équipe.
-    * **Déploiement** : Transformation en exécutable `.exe` pour une utilisation "clé en main" sans installation de Python sur les postes clients.
-* **Impact** : Suppression de la création annuelle de fichiers manuels, fiabilisation des données RH.
 
-## Pipeline de Données "Viséo 17" (Projet CCI)
-* **Type** : Data Engineering / Analyse
+* **Compétences Démontrées** : Architecture événementielle, Gestion de sockets temps réel, Respect de la confidentialité des données (zéro télémétrie).
+* **Code Source** : [github.com/qurnt1/main_lol_2](https://github.com/qurnt1/main_lol_2.git)
+
+## Application "Flux Manager" (Projet Groupama)
+
+* **Type** : Outil Métier / Data Engineering
+* **Problème** : Processus critique de suivi d'activité reposant sur des centaines de fichiers Excel décentralisés, engendrant des erreurs de consolidation et une maintenance lourde.
 * **Solution Technique** :
-    * Nettoyage et normalisation de bases de données hétérogènes (Data Cleaning).
-    * Utilisation de **SQL** et **Access** pour structurer les données économiques départementales.
-    * Préparation des datasets pour l'intégration dans l'outil de visualisation final.
-* **Impact** : Fiabilisation des indicateurs économiques utilisés par les décideurs locaux.
+* **Application Desktop** : Conception d'une GUI moderne et ergonomique avec **CustomTkinter** pour la saisie utilisateur.
+* **Architecture de Données** : Centralisation des flux dans une structure standardisée (CSV/SQL), éliminant la redondance des fichiers.
+* **Déploiement** : Packaging de l'environnement Python en exécutable autonome (.exe) pour un déploiement "Zero-Config" sur les postes agents.
+
+
+* **Impact** : Fiabilisation à 100% de la consolidation des données RH et suppression de la charge de maintenance annuelle des fichiers Excel.
+
+## Pipeline de Données & Sondage "Viséo 17" (Projet CCI)
+
+* **Type** : Analyse Statistique / Data Management
+* **Objectif** : Optimiser le taux de réponse et les coûts de l'enquête annuelle économique départementale.
+* **Méthodologie** :
+* **Échantillonnage** : Mise en place d'un sondage stratifié sur une base de 40 000 entreprises (Critères : Secteur, Taille, Localisation).
+* **Data Cleaning** : Nettoyage et normalisation de bases hétérogènes pour préparer l'injection dans les outils de visualisation.
+* **Contrainte Technique** : Développement de requêtes complexes sous **SQL (Access)** et **Excel** pour contourner les limitations logicielles de l'environnement client.
+
+
+* **Impact** : Réduction significative des coûts d'impression (ciblage papier optimisé) et production d'indicateurs fiables pour les décideurs locaux.
