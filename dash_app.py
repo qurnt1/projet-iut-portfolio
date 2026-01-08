@@ -19,7 +19,6 @@ MAX_QUESTIONS = 4
 
 st.set_page_config(
     page_title="Quentin Chabot - Assistant IA",
-    page_icon="🤖",
     layout="centered",
     initial_sidebar_state="collapsed"
 )

@@ -1,5 +1,8 @@
 # Profil et Biographie - Quentin CHABOT
 
+## Résumé Personnel
+J'ai actuellement 20 ans et vis a niort
+
 ## Résumé Professionnel
 Étudiant en BUT Science des Données (IUT de Niort, Université de Poitiers), je me spécialise dans la **Visualisation et la Conception d'Outils Décisionnels (VCOD)**. Passionné par l'informatique et les mathématiques, mon profil combine compétences techniques (Python, SQL, BI) et une forte éthique de travail.
 
