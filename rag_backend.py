@@ -1,16 +1,17 @@
 import json
 import inspect
 from typing import Any, Callable, List, Dict, Optional
-from openai import OpenAI
-from openai.types.chat import ChatCompletionMessage
+from groq import Groq
 
 # ==========================================
-# MOTEUR RAG (Backend Optimisé)
+# MOTEUR RAG (Backend Groq)
 # ==========================================
 
-class OpenAIProvider:
+class GroqProvider:
     def __init__(self, api_key: str):
-        self.client = OpenAI(api_key=api_key)
+        if not api_key:
+            raise ValueError("La clé API Groq est manquante.")
+        self.client = Groq(api_key=api_key)
 
 class Tool:
     def __init__(self, name: str, description: str):
@@ -25,7 +26,6 @@ class Tool:
     def execute(self, **kwargs) -> Any:
         if not self.func:
             raise ValueError(f"Tool {self.name} has no function attached.")
-        # Logs pour le développeur (apparaîtront dans le terminal)
         print(f"🔧 [TOOL EXEC] {self.name} called with: {kwargs}")
         return self.func(**kwargs)
 
@@ -60,8 +60,7 @@ class AgentResponse:
         return self.text
 
 class Agent:
-    # CORRECTION : Utilisation de gpt-4o-mini (rapide/pas cher) ou gpt-4-turbo
-    def __init__(self, name: str, instructions: str, tools: List[Tool], provider: OpenAIProvider, model: str = "gpt-4.1-nano"):
+    def __init__(self, name: str, instructions: str, tools: List[Tool], provider: GroqProvider, model: str):
         self.name = name
         self.tools = {t.name: t for t in tools} if tools else {}
         self.client = provider.client
@@ -79,17 +78,18 @@ class Agent:
                 model=self.model,
                 messages=self.messages,
                 tools=api_tools,
-                tool_choice="auto" if api_tools else None
+                tool_choice="auto" if api_tools else None,
+                temperature=0.5 # Température basse pour la précision factuelle
             )
         except Exception as e:
-            return AgentResponse(f"Erreur API OpenAI: {e}")
+            return AgentResponse(f"Erreur API Groq: {e}")
 
         message = response.choices[0].message
         final_text = ""
 
         # 2. Gestion des Tools
         if message.tool_calls:
-            self.messages.append(message.model_dump())
+            self.messages.append(message) 
             
             for tool_call in message.tool_calls:
                 fn_name = tool_call.function.name
@@ -108,11 +108,14 @@ class Agent:
                     })
             
             # 3. Second appel LLM (Synthèse)
-            final_response = self.client.chat.completions.create(
-                model=self.model,
-                messages=self.messages
-            )
-            final_text = final_response.choices[0].message.content
+            try:
+                final_response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=self.messages
+                )
+                final_text = final_response.choices[0].message.content
+            except Exception as e:
+                return AgentResponse(f"Erreur API Groq (Synthèse): {e}")
         else:
             final_text = message.content
 
