@@ -17,6 +17,7 @@ load_dotenv()
 USER_AVATAR = "👤"
 BOT_AVATAR = "assets/profile.png"
 THRESHOLD_QUESTIONS = 4 
+MEMORY_WINDOW = 6
 
 # Nouveautés : URLs directes pour les icônes (Plus fiable que les emojis)
 ICON_BRAIN = "https://cdn-icons-png.flaticon.com/512/2942/2942946.png"
@@ -35,35 +36,28 @@ st.set_page_config(
 )
 
 # Injection CSS : Polices Google, Taille Avatars, Style Claude
+# Injection CSS : Polices Google, Taille Avatars, Style Claude
 st.markdown("""<style>
     /* --- IMPORT POLICES --- */
     @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lato:wght@300;400;700&display=swap');
 
-    /* --- GLOBAL (CLAUDE-LIKE PALETTE) --- */
+    /* --- GLOBAL PALETTE --- */
     :root {
-        --primary-color: #D97757;              /* Orange (accent principal) */
-        --background-color: #FAF9F5;           /* Light (fond principal) */
-        --secondary-background-color: #FFFFFF; /* Surfaces blanches (cards/panneaux) */
-        --text-color: #141413;                /* Dark (texte principal) */
-        --text-muted-color: #B0AEA5;          /* Mid Gray (texte secondaire/placeholder) */
-        --border-color: #E8E6DC;              /* Light Gray (bordures/séparateurs) */
-        --hover-tint: #FFF8F5;                /* Teinte hover chaude (déjà utilisée) */
+        --primary-color: #D97757;              /* Orange */
+        --background-color: "#eee8d1ff"         /* Light */
+        --secondary-background-color: #eee8d1ff; /* White */
+        --text-color: #141413;                 /* Dark */
+        --text-muted-color: #B0AEA5;           /* Gray */
+        --border-color: #E8E6DC;               /* Border Gray */
+        --hover-tint: #FFF8F5;                 /* Warm Hover */
     }
 
-    h1,
-    h2,
-    h3,
-    h4,
-    .stHeader {
+    h1, h2, h3, h4, .stHeader {
         font-family: 'Merriweather', serif !important;
         color: var(--text-color) !important;
     }
 
-    .stApp,
-    .stMarkdown,
-    .stChatMessage,
-    p,
-    div {
+    .stApp, .stMarkdown, .stChatMessage, p, div {
         font-family: 'Lato', sans-serif !important;
         color: var(--text-color) !important;
     }
@@ -72,23 +66,81 @@ st.markdown("""<style>
         background-color: var(--background-color) !important;
     }
 
-    /* --- CORRECTIF BARRE DU BAS (INPUT) --- */
+    /* --- BARRE DU BAS (INPUT) --- */
     div[data-testid="stBottom"] {
         background-color: var(--background-color) !important;
         border-top: 1px solid var(--border-color);
     }
 
-    .stChatInput textarea {
+    /* --- MODIFICATION : ZONE DE SAISIE (CAPSULE) --- */
+    div[data-testid="stChatInput"] > div {
+        border-color: var(--primary-color) !important;
+        border-width: 2px !important;
+        border-radius: 25px !important;
         background-color: var(--secondary-background-color) !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+    }
+
+    .stChatInput textarea {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
         color: var(--text-color) !important;
-        border: 1px solid var(--border-color) !important;
+        padding-top: 0.5rem !important;
+    }
+
+    div[data-testid="stChatInput"] > div:focus-within {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 1px var(--primary-color) !important;
     }
 
     .stChatInput textarea::placeholder {
         color: var(--text-muted-color) !important;
     }
 
-    /* --- CORRECTIF BOUTONS DE LIEN (LINKEDIN / MAIL) --- */
+    /* --- BOUTON SIDEBAR (CHEVRON) --- */
+    div[data-testid="stHeader"] button {
+        color: var(--primary-color) !important;
+        border: none !important;
+        background-color: transparent !important;
+    }
+    div[data-testid="stHeader"] button:hover {
+        color: var(--primary-color) !important;
+        background-color: var(--hover-tint) !important;
+    }
+
+    /* --- BOUTONS SUGGESTIONS (CUSTOM) --- */
+    a.custom-img-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--secondary-background-color);
+        color: var(--text-color);
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    a.custom-img-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color) !important;
+        background-color: var(--hover-tint);
+    }
+
+    a.custom-img-btn img {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        object-fit: contain;
+    }
+
+    /* --- LIENS STDLIB --- */
     div[data-testid="stLinkButton"] > a {
         background-color: var(--secondary-background-color) !important;
         color: var(--text-color) !important;
@@ -106,50 +158,6 @@ st.markdown("""<style>
         color: var(--primary-color) !important;
         background-color: var(--hover-tint) !important;
     }
-
-    /* --- BOUTONS CLASSIQUES (SUGGESTIONS) --- */
-    div.stButton > button {
-        background-color: var(--secondary-background-color) !important;
-        color: var(--text-color) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 8px;
-    }
-
-    div.stButton > button:hover {
-        border-color: var(--primary-color) !important;
-        color: var(--primary-color) !important;
-    }
-
-    /* --- BOUTONS PERSONNALISÉS AVEC IMAGES --- */
-    a.custom-img-btn {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--secondary-background-color);
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 0.5rem 0.75rem; /* Ajustez selon la hauteur désirée */
-        text-decoration: none;
-        font-weight: 600;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        transition: all 0.2s;
-        width: 100%; /* Prend toute la largeur de la colonne */
-        box-sizing: border-box;
-    }
-
-    a.custom-img-btn:hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        background-color: var(--hover-tint);
-    }
-
-    a.custom-img-btn img {
-        width: 20px; /* Taille de l'icône */
-        height: 20px;
-        margin-right: 10px; /* Espace entre icône et texte */
-        object-fit: contain;
-    }
     
     /* --- AVATARS --- */
     div[data-testid="stChatMessage"] .stImage,
@@ -165,27 +173,16 @@ st.markdown("""<style>
         background-color: var(--secondary-background-color) !important;
         border-right: 1px solid var(--border-color);
     }
-
     [data-testid="stSidebar"] * {
         color: var(--text-color) !important;
     }
 
-    /* --- CSS POUR ALIGNER IMAGE + BOUTON --- */
+    /* --- ALIGNEMENT COLONNES --- */
     div[data-testid="column"] {
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-    }
-
-    div[data-testid="column"] img {
-        margin-bottom: 8px !important;
-        object-fit: contain;
-    }
-
-    div[data-testid="column"] button {
-        width: 100%;
-        margin-top: 0px;
     }
     
     div[data-testid="stChatInput"] button {
@@ -193,13 +190,12 @@ st.markdown("""<style>
     }
 </style>
 """, unsafe_allow_html=True)
-
 # ================================
 # 2. LOGIQUE BACKEND & OUTILS
 # ================================
 @Tool(
     name="search_portfolio",
-    description="Cherche dans le CV et le parcours de Quentin."
+    description="Moteur de recherche indispensable pour répondre aux questions sur Quentin (CV, email, expériences, études). L'argument 'query' est la question posée."
 )
 def search_portfolio(query: str) -> str:
     status_container = st.empty()
@@ -242,6 +238,37 @@ def search_portfolio(query: str) -> str:
     finally:
         time.sleep(1)
         status_container.empty()
+def prune_agent_memory(agent, limit=6):
+    """
+    Réduit l'historique interne de l'agent pour ne garder que les N derniers messages.
+    Préserve le message système (instruction initiale).
+    """
+    try:
+        # On tente d'accéder à la liste des messages (standard dans la plupart des libs Agent)
+        messages_list = None
+        if hasattr(agent, "messages"):
+            messages_list = agent.messages
+        elif hasattr(agent, "memory") and hasattr(agent.memory, "messages"):
+            messages_list = agent.memory.messages
+            
+        if messages_list is not None and isinstance(messages_list, list):
+            if len(messages_list) > limit:
+                # Identification du System Prompt (souvent à l'index 0)
+                sys_msg = messages_list[0] if messages_list and messages_list[0].get("role") == "system" else None
+                
+                # On garde les 'limit' derniers messages
+                kept_msgs = messages_list[-limit:]
+                
+                # Reconstitution : System Prompt + Derniers messages
+                new_history = [sys_msg] + kept_msgs if sys_msg else kept_msgs
+                
+                # Réaffectation
+                if hasattr(agent, "messages"):
+                    agent.messages = new_history
+                elif hasattr(agent, "memory"):
+                    agent.memory.messages = new_history
+    except Exception as e:
+        print(f"Warning: Impossible de nettoyer la mémoire de l'agent: {e}")
 
 def initialize_resources():
     # Init Upstash
@@ -335,41 +362,53 @@ def render_action_button(text, icon_url, key_param):
 
 def render_sidebar():
     with st.sidebar:
-        # 1. Nom tout en haut
         st.markdown("<h2 style='text-align: center; margin-top:0;'>Quentin Chabot</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #555 !important;'>Développeur / Data Scientist</p>", unsafe_allow_html=True)
         
         st.divider()
 
-        # 2. Bouton Nouvelle Conv
         if st.button("🗑️ Nouvelle conversation", use_container_width=True):
-            # On garde le message de bienvenue !
             st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis l'IA de Quentin. Comment puis-je vous renseigner sur son profil ?"}]
             st.rerun()
             
         st.divider()
 
-        # 3. Status avec icônes
+        st.markdown("### État du système")
+
+        # Récupération de l'état
         groq_ok = st.session_state.get("groq_status", False)
         upstash_ok = st.session_state.get("upstash_status", False)
         
-        # Helper interne pour afficher le status proprement
+        # Fonction interne corrigée pour l'affichage HTML
         def status_row(label, is_ok):
-            icon = ICON_CHECK if is_ok else ICON_ERROR
-            color = "#2e7d32" if is_ok else "#c62828"
-            status_text = "Opérationnel" if is_ok else "Erreur"
+            if is_ok:
+                icon_url = ICON_CHECK
+                bg_color = "#e8f5e9"    # Vert pâle
+                border_color = "#a5d6a7"
+                text_color = "#2e7d32"
+                status_text = "Connecté"
+            else:
+                icon_url = ICON_ERROR
+                bg_color = "#ffebee"    # Rouge pâle
+                border_color = "#ef9a9a"
+                text_color = "#c62828"
+                status_text = "Déconnecté"
             
-            st.markdown(f"""
-            <div style="display:flex; align-items:center; margin-bottom:12px; background:#f9f9f9; padding:8px; border-radius:8px;">
-                <img src="{icon}" style="width:24px; height:24px; margin-right:10px;">
-                <div>
-                    <div style="font-weight:bold; font-size:0.9rem;">{label}</div>
-                    <div style="font-size:0.8rem; color:{color} !important;">{status_text}</div>
+            # HTML compacté pour éviter les erreurs d'indentation Python
+            html_code = f"""
+            <div style="display:flex; align-items:center; margin-bottom:10px; background-color:{bg_color}; border:1px solid {border_color}; padding:10px; border-radius:8px;">
+                <img src="{icon_url}" style="width:24px; height:24px; margin-right:12px; object-fit:contain;">
+                <div style="line-height: 1.2;">
+                    <div style="font-weight:bold; font-size:0.9rem; color:{text_color};">{label}</div>
+                    <div style="font-size:0.8rem; color:{text_color}; opacity:0.9;">{status_text}</div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """
+            
+            # C'est cette ligne qui fait la magie : unsafe_allow_html=True
+            st.markdown(html_code, unsafe_allow_html=True)
 
-        status_row("Intelligence (LLM)", groq_ok)
+        status_row("Intelligence Artificielle (LLM)", groq_ok)
         status_row("Mémoire (Vector DB)", upstash_ok)
 
 def main():
@@ -426,7 +465,7 @@ def main():
     if show_contact:
         st.divider()
         st.markdown("<h4 style='text-align: center;'>Passons au réel</h4>", unsafe_allow_html=True)
-        st.info("L'IA c'est bien, l'humain c'est mieux. Retrouvez-moi sur mes canaux professionnels habituels.")
+        st.info("L'IA c'est bien, l'humain c'est mieux. Retrouvez-moi sur mes canaux professionnels.")
         
         c1, c2 = st.columns(2)
         with c1: render_custom_button("mailto:quentin.chabot@etu.univ-poitiers.fr", "M'envoyer un Email", ICON_MAIL)
@@ -460,6 +499,7 @@ def main():
             if st.session_state.get("groq_status") and st.session_state.get("upstash_status"):
                 with st.spinner("Analyse de la demande en cours..."):
                     try:
+                        prune_agent_memory(st.session_state.agent, MEMORY_WINDOW)
                         raw_res = st.session_state.agent.run(prompt_to_process).get_text()
                     except Exception as e:
                         raw_res = f"Une erreur est survenue lors du traitement : {e}"
