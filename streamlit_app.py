@@ -150,7 +150,7 @@ st.markdown("""<style>
         margin-right: 10px; /* Espace entre icône et texte */
         object-fit: contain;
     }
-
+    
     /* --- AVATARS --- */
     div[data-testid="stChatMessage"] .stImage,
     div[data-testid="stChatMessage"] .stImage > img {
@@ -186,6 +186,10 @@ st.markdown("""<style>
     div[data-testid="column"] button {
         width: 100%;
         margin-top: 0px;
+    }
+    
+    div[data-testid="stChatInput"] button {
+        color: var(--primary-color) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -415,14 +419,14 @@ def main():
         c1, c2, c3, c4 = st.columns(4)
         with c1: render_action_button("Études", ICON_GRADUATION, "studies")
         with c2: render_action_button("Expériences", ICON_WORK, "exp")
-        with c3: render_action_button("Tech", ICON_TECH, "tech")
+        with c3: render_action_button("Compétences techniques", ICON_TECH, "tech")
         with c4: render_action_button("Soft Skills", ICON_BRAIN, "soft")
 
     # 4. Affichage du bloc Contact (Si seuil atteint)
     if show_contact:
         st.divider()
-        st.markdown("<h4 style='text-align: center;'>Mon profil retient votre attention ?</h4>", unsafe_allow_html=True)
-        st.info("L'IA présente les faits, mais je porte les projets. Concrétisons cet échange via les liens ci-dessous.")
+        st.markdown("<h4 style='text-align: center;'>Passons au réel</h4>", unsafe_allow_html=True)
+        st.info("L'IA c'est bien, l'humain c'est mieux. Retrouvez-moi sur mes canaux professionnels habituels.")
         
         c1, c2 = st.columns(2)
         with c1: render_custom_button("mailto:quentin.chabot@etu.univ-poitiers.fr", "M'envoyer un Email", ICON_MAIL)
