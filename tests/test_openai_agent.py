@@ -19,3 +19,6 @@ def test_openai_agent_runs_ping_pong():
     result = Runner.run_sync(agent, "ping")
     assert result.final_output.strip() == "pong"
     print(f"🤖 Réponse de l'agent : {result.final_output}")
+
+if __name__ == "__main__":
+    test_openai_agent_runs_ping_pong()
