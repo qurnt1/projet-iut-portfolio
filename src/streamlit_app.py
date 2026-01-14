@@ -222,10 +222,15 @@ def render_sidebar():
         st.divider()
         st.subheader("État du système")
 
-        st.success("IA (LLM) : Configurée") if groq_is_configured() else st.error("IA (LLM) : Non configurée")
-        st.success("Mémoire (Vector DB) : Connectée") if st.session_state.get("upstash_status") else st.error(
-            "Mémoire (Vector DB) : Déconnectée"
-        )
+        if groq_is_configured():
+            st.success("IA (LLM) : Configurée")
+        else:
+            st.error("IA (LLM) : Non configurée")
+
+        if st.session_state.get("upstash_status"):
+            st.success("Mémoire (Vector DB) : Connectée")
+        else:
+            st.error("Mémoire (Vector DB) : Déconnectée")
 
 
 # ================================

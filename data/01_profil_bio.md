@@ -1,9 +1,8 @@
 # Profil et Biographie - Quentin CHABOT
 
 ## Résumé Professionnel
-
 Actuellement **Data Analyst en alternance** (Groupama Centre-Atlantique) et étudiant en **3ème année de BUT Science des Données**, je combine une compétence technique forte en **développement Python** et une expertise en **Business Intelligence**.
-Mon profil se distingue par ma capacité à concevoir des outils d'ingénierie logicielle (exécutables autonomes, automatisation) pour résoudre des problématiques de données concrètes. Rigoureux et orienté résultats, je transforme les processus manuels en workflows automatisés et fiables.
+Mon profil se distingue par ma capacité à concevoir des outils d'ingénierie logicielle pour résoudre des problématiques de données concrètes. Basé à Niort (20 ans), je suis mobile sur toute la France pour la poursuite de mes études.
 
 ## Objectifs Professionnels
 
