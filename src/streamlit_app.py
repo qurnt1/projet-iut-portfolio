@@ -46,54 +46,27 @@ SYS_PROMPT = (
 # ================================
 # 2. STYLES CSS
 # ================================
+def local_css(file_name):
+    # Construction du chemin absolu par rapport au script courant
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, file_name)
+    
+    try:
+        with open(file_path, "r") as F:
+            # CORRECTION CRITIQUE : </style> avec un slash, pas <style>
+            st.markdown(f'<style>{F.read()}</style>', unsafe_allow_html=True) 
+    except FileNotFoundError:
+        st.error(f"Fichier CSS introuvable : {file_path}")
 
-st.markdown(
-    """
-<style>
-    div[data-testid="stChatInput"] > div {
-        border-color: #D97757 !important;
-        border-width: 2px !important;
-        border-radius: 25px !important;
-    }
-    div[data-testid="stChatInput"] > div:focus-within {
-        box-shadow: 0 0 0 1px #D97757 !important;
-    }
+# Appel de la fonction
+local_css("styles.css")
 
-    a.custom-img-btn {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        background-color: #eee8d1ff;
-        color: #141413;
-        border: 1px solid #E8E6DC;
-        border-radius: 8px;
-        padding: 0.6rem 0.75rem;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.2s;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    a.custom-img-btn:hover {
-        border-color: #D97757;
-        color: #D97757 !important;
-        background-color: #FFF8F5;
-    }
-    a.custom-img-btn img {
-        width: 20px;
-        height: 20px;
-        margin-right: 10px;
-        object-fit: contain;
-    }
-</style>
-""",
-    unsafe_allow_html=True,
-)
 
 # ================================
 # 3. DATA / SERVICES
 # ================================
 
+    
 def initialize_upstash():
     if "upstash_index" in st.session_state:
         return

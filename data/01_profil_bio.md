@@ -6,8 +6,8 @@ Mon profil se distingue par ma capacité à concevoir des outils d'ingénierie l
 
 ## Objectifs Professionnels
 
-Mon ambition est d'intégrer un **Master en Intelligence Artificielle ou Data Engineering** en alternance à partir de **septembre 2026**.
-Je recherche une entreprise, idéalement dans le **secteur de la finance**, capable de m'offrir des défis techniques autour du **Machine Learning**, de l'architecture de données ou du **Big Data**.
+Mon ambition est d'intégrer un **Master en Intelligence Artificielle ou Data Engineering (ou école d'ingénieur)** en alternance à partir de **septembre 2026**, si possible dans le **domaine de la finance**.
+Je recherche une entreprise capable de m'offrir des défis techniques autour du **Machine Learning**, de l'architecture de données ou du **Big Data**.
 
 ## Formation Académique
 
@@ -41,5 +41,5 @@ Je recherche une entreprise, idéalement dans le **secteur de la finance**, capa
 * **LinkedIn** : [linkedin.com/in/chabotquentin](https://fr.linkedin.com/in/chabotquentin)
 * **GitHub** : [github.com/qurnt1](https://github.com/qurnt1)
 * **Portfolio** : [qurnt1.github.io/portfolio-BUT2](https://qurnt1.github.io/portfolio-BUT2/)
-* **Localisation** : Niort / La Rochelle (Mobile France entière pour Master)
+* **Localisation** : Niort / La Rochelle (Mobile France entière pour mes études supérieures)
 * **Mobilité** : Permis B + Véhicule personnel.
