@@ -44,25 +44,6 @@ SYS_PROMPT = (
 )
 
 # ================================
-# 2. STYLES CSS
-# ================================
-def local_css(file_name):
-    # Construction du chemin absolu par rapport au script courant
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_dir, file_name)
-    
-    try:
-        with open(file_path, "r") as F:
-            # CORRECTION CRITIQUE : </style> avec un slash, pas <style>
-            st.markdown(f'<style>{F.read()}</style>', unsafe_allow_html=True) 
-    except FileNotFoundError:
-        st.error(f"Fichier CSS introuvable : {file_path}")
-
-# Appel de la fonction
-local_css("styles.css")
-
-
-# ================================
 # 3. DATA / SERVICES
 # ================================
 
@@ -260,13 +241,33 @@ def main():
         st.divider()
         st.subheader("Passons au réel")
         st.info("L'IA c'est bien, l'humain c'est mieux. Retrouvez-moi sur mes canaux professionnels.")
+        
         c1, c2, c3 = st.columns(3)
+        
+        btn_style = "display: flex; align-items: center; justify-content: center; background-color: #eee8d1ff; color: #141413; border: 1px solid #E8E6DC; border-radius: 8px; padding: 0.6rem; text-decoration: none; font-weight: 600; width: 100%;"
+        img_style = "width: 20px; height: 20px; margin-right: 10px;"
+
         with c1:
-            render_custom_button("mailto:quentin.chabot@etu.univ-poitiers.fr", "M'envoyer un Email", ICON_MAIL)
+            st.markdown(f"""
+            <a href="mailto:quentin.chabot@etu.univ-poitiers.fr" target="_blank" style="{btn_style}">
+                <img src="{ICON_MAIL}" style="{img_style}"> Email
+            </a>
+            """, unsafe_allow_html=True)
+
         with c2:
-            render_custom_button("https://fr.linkedin.com/in/chabotquentin", "Mon Profil LinkedIn", ICON_LINKEDIN)
+            st.markdown(f"""
+            <a href="https://fr.linkedin.com/in/chabotquentin" target="_blank" style="{btn_style}">
+                <img src="{ICON_LINKEDIN}" style="{img_style}"> LinkedIn
+            </a>
+            """, unsafe_allow_html=True)
+
         with c3:
-            render_custom_button("https://github.com/qurnt1", "Voir mes projets sur GitHub", ICON_GITHUB)
+            st.markdown(f"""
+            <a href="https://github.com/qurnt1" target="_blank" style="{btn_style}">
+                <img src="{ICON_GITHUB}" style="{img_style}"> GitHub
+            </a>
+            """, unsafe_allow_html=True)
+            
         st.write("")
 
     # Input
