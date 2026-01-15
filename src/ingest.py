@@ -31,7 +31,7 @@ def load_markdown_file(file_path: Path) -> str:
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        print(f"❌ Erreur lors de la lecture de {file_path}: {e}")
+        print(f"Erreur lors de la lecture de {file_path}: {e}")
         return ""
 
 
@@ -116,9 +116,9 @@ def index_data_to_upstash(chunks: List[Dict[str, str]], index: Index) -> int:
                 }]
             )
             indexed_count += 1
-            print(f"✅ Chunk {i+1}/{len(chunks)} indexé: {chunk['metadata']['title'][:50]}...")
+            print(f"Chunk {i+1}/{len(chunks)} indexé: {chunk['metadata']['title'][:50]}...")
         except Exception as e:
-            print(f"❌ Erreur lors de l'indexation du chunk {i}: {e}")
+            print(f"Erreur lors de l'indexation du chunk {i}: {e}")
     
     return indexed_count
 

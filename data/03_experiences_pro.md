@@ -13,7 +13,7 @@
 
 * **Compétences Transverses** : Gestion du changement, formation des utilisateurs, analyse de besoins fonctionnels.
 
-## Chargé d'Études Statistiques (Stage) - CCI La Rochelle
+## Stage de Chargé d'Études Statistiques - CCI La Rochelle
 
 * **Période** : Avril 2025 - Juin 2025 (La Rochelle)
 * **Contexte** : Observatoire économique départemental (Viséo 17).

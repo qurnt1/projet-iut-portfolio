@@ -276,7 +276,7 @@ def main():
         if col1.button("🎓 Études", use_container_width=True):
             prompt_to_process = "Quel est ton parcours académique ?"
         if col2.button("💼 Expériences", use_container_width=True):
-            prompt_to_process = "Détaille tes expériences pro."
+            prompt_to_process = "Détaille tes expériences professionnelles techniques (Alternance, Stages et jobs étudiants)."
         if col3.button("🛠️ Tech", use_container_width=True):
             prompt_to_process = "Quelles sont tes compétences techniques ?"
         if col4.button("🧠 Soft Skills", use_container_width=True):
@@ -293,7 +293,7 @@ def main():
         with c2:
             render_custom_button("https://fr.linkedin.com/in/chabotquentin", "Mon Profil LinkedIn", ICON_LINKEDIN)
         with c3:
-            render_custom_button("https://github.com/chabotquentin", "Mon Profil GitHub", ICON_GITHUB)
+            render_custom_button("https://github.com/qurnt1", "Voir mes projets sur GitHub", ICON_GITHUB)
         st.write("")
 
     # Input
