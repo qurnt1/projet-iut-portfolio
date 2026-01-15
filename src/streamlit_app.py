@@ -29,6 +29,7 @@ MEMORY_WINDOW_MODEL = 14       # nb de messages envoyés au LLM (hors system)
 
 ICON_MAIL = "https://cdn-icons-png.flaticon.com/512/732/732200.png"
 ICON_LINKEDIN = "https://cdn-icons-png.flaticon.com/512/3536/3536505.png"
+ICON_GITHUB = "https://cdn-icons-png.flaticon.com/512/733/733553.png"
 
 DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
@@ -286,11 +287,13 @@ def main():
         st.divider()
         st.subheader("Passons au réel")
         st.info("L'IA c'est bien, l'humain c'est mieux. Retrouvez-moi sur mes canaux professionnels.")
-        c1, c2 = st.columns(2)
+        c1, c2, c3 = st.columns(3)
         with c1:
             render_custom_button("mailto:quentin.chabot@etu.univ-poitiers.fr", "M'envoyer un Email", ICON_MAIL)
         with c2:
             render_custom_button("https://fr.linkedin.com/in/chabotquentin", "Mon Profil LinkedIn", ICON_LINKEDIN)
+        with c3:
+            render_custom_button("https://github.com/chabotquentin", "Mon Profil GitHub", ICON_GITHUB)
         st.write("")
 
     # Input
