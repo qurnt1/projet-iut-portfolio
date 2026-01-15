@@ -193,7 +193,6 @@ def render_sidebar():
 # ================================
 
 def main():
-    initialize_upstash()
     render_sidebar()
 
     st.title("Échangez avec Quentin !")
@@ -276,85 +275,43 @@ def main():
         prompt_to_process = user_input
 
     # Traitement
+    # ... (le code précédent reste inchangé jusqu'à if prompt_to_process:)
+
+    # Traitement
     if prompt_to_process:
+        # 1. Afficher le message utilisateur
         st.session_state.messages.append({"role": "user", "content": prompt_to_process})
         with st.chat_message("user", avatar=USER_AVATAR):
             st.markdown(prompt_to_process)
 
+        # 2. Appel à l'Agent
         avatar_assistant = BOT_AVATAR if os.path.exists(BOT_AVATAR) else "🤖"
         with st.chat_message("assistant", avatar=avatar_assistant):
             placeholder = st.empty()
-
-            if not groq_is_configured():
-                full_res = "⚠️ GROQ_API_KEY manquante (service IA non configuré)."
-                placeholder.error(full_res)
-                st.session_state.messages.append({"role": "assistant", "content": full_res})
-                time.sleep(0.2)
-                st.rerun()
-
-            # Build context (Upstash facultatif)
-            context = ""
-            if st.session_state.get("upstash_status"):
-                with st.spinner("📚 Consultation de la base..."):
-                    context = build_internal_context(
-                        query=prompt_to_process,
-                        top_k=int(os.getenv("UPSTASH_TOP_K", "5")),
-                    )
-
-            # Build model messages
-            model = (os.getenv("GROQ_MODEL") or DEFAULT_GROQ_MODEL).strip()
-            print(f"DEBUG: Appel LLM avec le modèle {model}...")
-
-            history = st.session_state.messages[-MEMORY_WINDOW_MODEL:]
-            llm_messages = [{"role": "system", "content": SYS_PROMPT}]
-
-            if context:
-                llm_messages.append(
-                    {
-                        "role": "system",
-                        "content": "Contexte interne (ne jamais mentionner son origine, ni citer de documents):\n"
-                                   f"{context}",
-                    }
-                )
-
-            # Injecter l'historique (user/assistant) tel quel
-            for m in history:
-                if m["role"] in ("user", "assistant"):
-                    llm_messages.append({"role": m["role"], "content": m["content"]})
-
-            # Retry (API)
-            max_retries = 3
-            success = False
             full_res = ""
 
-            with st.spinner("Analyse en cours..."):
-                for attempt in range(max_retries):
-                    try:
-                        full_res = groq_chat(llm_messages, model=model, temperature=0.3)
-                        success = True
-                        break
-                    except Exception as e:
-                        print(f"⚠️ Tentative {attempt+1} échouée : {e}")
-                        time.sleep(1)
+            with st.spinner("L'agent réfléchit..."):
+                try:
+                    # C'est ici que la magie opère : appel unique au backend
+                    full_res = run_agent_query(prompt_to_process)
+                except Exception as e:
+                    full_res = f"Une erreur est survenue : {e}"
+            
+            # 3. Affichage (Simulation de streaming pour l'UX)
+            # L'agent synchrone répond tout d'un coup, on stream le résultat pour l'effet visuel
+            temp_text = ""
+            for chunk in stream_text(full_res):
+                temp_text += chunk
+                placeholder.markdown(temp_text + "▌")
+            placeholder.markdown(full_res)
 
-            if not success:
-                full_res = "Une erreur technique persistante empêche la réponse."
-
-            # Affichage progressif
-            if success:
-                temp = ""
-                for chunk in stream_text(full_res):
-                    temp += chunk
-                    placeholder.markdown(temp + "▌")
-                placeholder.markdown(full_res)
-            else:
-                placeholder.error(full_res)
-
+            # 4. Sauvegarde historique
             st.session_state.messages.append({"role": "assistant", "content": full_res})
 
+        # Petit délai pour fluidité
         time.sleep(0.2)
         st.rerun()
-
+        
 
 if __name__ == "__main__":
     main()

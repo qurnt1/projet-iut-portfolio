@@ -1,0 +1,1 @@
+qu'est ce qu'un rag, comment fonctionne lr projet
