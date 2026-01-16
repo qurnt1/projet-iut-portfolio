@@ -8,7 +8,7 @@ from openai import AsyncOpenAI
 # 1. Charger les variables d'environnement
 dotenv.load_dotenv()
 
-# 2. Définition de l'outil de recherche (Retrieval Tool)
+# 2. Définition de l'outil de recherche sur le portfolio via upstash
 @function_tool
 def search_portfolio(query: str) -> str:
     """
