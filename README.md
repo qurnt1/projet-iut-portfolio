@@ -34,29 +34,29 @@ src/
 ## Installation locale
 
 1. **Clone le repository**
-``bash
+```bash
 git clone https://github.com/qurnt1/projet-iut-portfolio.git
 cd projet-iut-portfolio
-``
+```
 
 2. **Crée un environnement virtuel**
-``bash
+```bash
 python -m venv venv
 source venv/bin/activate  # Sur Windows: venv\Scripts\activate
-``
+```
 
 3. **Installe les dépendances**
-``bash
+```bash
 pip install -r requirements.txt
-``
+```
 
 4. **Configure les variables d'environnement**
 Crée un fichier .env avec tes clés API Groq et autres configurations nécessaires.
 
 5. **Lance l'app**
-``bash
+```bash
 streamlit run src/app.py
-``
+```
 
 ## Utilisation
 
