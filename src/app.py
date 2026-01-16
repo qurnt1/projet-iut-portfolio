@@ -11,7 +11,6 @@ from agents import Runner
 # Chargement des variables d'environnement
 load_dotenv()
 
-
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -22,7 +21,6 @@ st.set_page_config(
     layout="wide",
 )
 
-
 # Avatars pour l'affichage des messages
 USER_AVATAR: str = "👤"
 BOT_AVATAR: str = "assets/profile.png"
@@ -30,32 +28,30 @@ BOT_AVATAR: str = "assets/profile.png"
 # Seuil de questions avant affichage de la zone de contact
 THRESHOLD_QUESTIONS: int = 4
 
-# Gestion de l'historique des messages
-MEMORY_WINDOW_UI: int = 60       # Nombre max de messages affichés dans l'UI
-
 # URLs des icônes pour les boutons de contact
 ICON_MAIL: str = "https://cdn-icons-png.flaticon.com/512/732/732200.png"
 ICON_LINKEDIN: str = "https://cdn-icons-png.flaticon.com/512/3536/3536505.png"
 ICON_GITHUB: str = "https://cdn-icons-png.flaticon.com/512/733/733553.png"
 
-
 # ============================================================================
 # FONCTIONS UTILITAIRES & BACKEND RAG
 # ============================================================================
 def run_agent_query(query: str) -> str:
+    """
+    Exécute une requête via l'agent RAG défini dans agent.py.
+    """
     result = Runner.run_sync(
         starting_agent=portfolio_agent,
         input=query,
     )
     return result.final_output
 
-
 def stream_text(text: str) -> Generator[str, None, None]:
     """
     Génère un flux de mots pour simuler un effet de streaming.
 
     Cette fonction découpe le texte en mots et les renvoie un par un
-    avec un délai, créant un effet visuel de frappe progressive.
+    avec un délai, créant un effet visuel d'écriture progressive.
 
     Args:
         text: Le texte complet à streamer.
@@ -72,31 +68,6 @@ def stream_text(text: str) -> Generator[str, None, None]:
         yield word + " "
         time.sleep(0.02)
 
-def trim_ui_history(limit: int = MEMORY_WINDOW_UI) -> None:
-    """
-    Limite la taille de l'historique des messages affiché.
-
-    Conserve le premier message (message de bienvenue) et les N-1 derniers
-    messages pour éviter une surcharge de l'interface.
-
-    Args:
-        limit: Nombre maximum de messages à conserver. Par défaut MEMORY_WINDOW_UI.
-
-    Returns:
-        None
-
-    Note:
-        Modifie directement st.session_state.messages.
-    """
-    msgs: List[Dict[str, Any]] = st.session_state.get("messages", [])
-    if len(msgs) <= limit:
-        return
-
-    # Conservation du premier message (bienvenue) + les derniers messages
-    head: List[Dict[str, Any]] = msgs[:1]
-    tail: List[Dict[str, Any]] = msgs[-(limit - 1):]
-    st.session_state.messages = head + tail
-
 # ============================================================================
 # APPLICATION PRINCIPALE
 # ============================================================================
@@ -106,31 +77,27 @@ def main() -> None:
     Point d'entrée principal de l'application Streamlit.
 
     Orchestre le flux complet de l'interface :
-        2. Initialisation de l'historique des messages
-        3. Affichage des messages existants
-        4. Gestion des suggestions et de la zone de contact
-        5. Traitement des nouvelles questions
-        6. Appel à l'agent et affichage de la réponse
+        1. Initialisation de l'historique des messages
+        2. Affichage des messages existants
+        3. Gestion des suggestions et de la zone de contact
+        4. Traitement des nouvelles questions
+        5. Appel à l'agent et affichage de la réponse
 
     Returns:
         None
     """
 
     st.title("Échangez avec Quentin !")
-    st.write("Posez vos questions sur mon parcours académique et mes expériences.")
+    st.write("Posez moi des questions sur mon parcours académique et mes expériences.")
 
     # --- Initialisation de l'historique ---
     if "messages" not in st.session_state:
         st.session_state.messages = [
             {
                 "role": "assistant",
-                "content": "Bonjour. Je suis l'assistant virtuel de Quentin. "
-                           "Quel aspect de son profil souhaitez-vous approfondir aujourd'hui ?",
+                "content": "Bonjour. Je maîtrise l'ensemble du parcours de Quentin. Souhaitez-vous explorer ses compétences techniques, ses expériences ou ses projets ?"
             }
         ]
-
-    # Nettoyage de l'historique si nécessaire
-    trim_ui_history()
 
     # --- Affichage de l'historique des messages ---
     for msg in st.session_state.messages:
@@ -155,8 +122,10 @@ def main() -> None:
 
         if col1.button("Parcours académique", use_container_width=True):
             prompt_to_process = "Quel est ton parcours académique ?"
+
         if col2.button("Éxpériences professionnelles", use_container_width=True):
             prompt_to_process = "Détaille tes expériences professionnelles techniques (Alternance et Stage)."
+
         if col3.button("Compétences techniques", use_container_width=True):
             prompt_to_process = "Quelles sont tes compétences techniques ?"
 
@@ -210,7 +179,7 @@ def main() -> None:
         st.write("")
 
     # --- Zone de saisie utilisateur ---
-    user_input: Optional[str] = st.chat_input("Posez votre question ici...", key="chat_input")
+    user_input: Optional[str] = st.chat_input("Posez vos questions ici...", key="chat_input")
     if user_input:
         prompt_to_process = user_input
 
