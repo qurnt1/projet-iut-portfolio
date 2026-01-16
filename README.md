@@ -1,74 +1,80 @@
-# PROJET LLM
+﻿#  Portfolio Interactif avec Agent IA Groq
 
-Pour la réalisation de ce projet, vous pouvez utiliser l’IDE de votre choix (le plus connu : [Visual Studio Code](https://code.visualstudio.com/)). Je vous conseille aussi d’installer l’une de ces versions de Python : 3.12 ou 3.13 ([Download Python | Python.org](https://www.python.org/downloads/)).
+Agent conversationnel intelligent construit avec **Groq** pour explorer interactivement un portfolio. Utilise la génération augmentée par récupération (RAG) avec une base de données vectorielle et est déployé sur **Streamlit**.
 
-## Création de la base de données vectorielle
+**[ Essayer l'application](https://portfolio-llm-quentin.streamlit.app/) | [ Code source](https://github.com/qurnt1/projet-iut-portfolio.git)**
 
-Pour réaliser le projet, vous allez avoir besoin d’un index pour stocker vos informations :
-* Créer un compte [Signup - Upstash](https://console.upstash.com/auth/sign-up)
-* Aller dans l’outil « **Vector** »
-* Créer un « **Vector Index** »
-* Configurer l’index : 
-    * **Nom** : Ce que vous voulez
-    * **Région** : Ireland (eu-west-1)
-    * **Type** : Hybrid
-    * **Dense Embedding Model** : BAAI/bge-m3
-    * **Metric** : COSINE
-    * **Sparse Embedding Model** : BM25
-  
-![Configuration Upstash](assets/configuration_index_upstash.png)
-* **Plan** : Free
+## À propos
 
-## OpenAI
+Ce projet crée une expérience conversationnelle unique où les visiteurs peuvent poser des questions sur vos expériences, compétences et projets. L'agent IA répond intelligemment en puisant dans vos données de profil.
 
-Je vous transmettrais la clé API via UPdago. 
-**Note :** Seul le modèle `gpt-4.1-nano` est accessible avec cette clé.
+## Fonctionnalités
 
-## Tests
+- ** Chat intelligent** - Interaction naturelle avec un agent IA
+- ** RAG (Retrieval-Augmented Generation)** - Réponses contextuelles basées sur vos données
+- ** Groq** - LLM ultra-rapide et performant
+- ** Interface Streamlit** - Interface utilisateur intuitive et moderne
+- ** Déployé en ligne** - Accessible directement via le web
 
-Avant de commencer le projet, nous allons vérifier que tout fonctionne bien (pas de blocage proxy…), pour cela :
-* Créer un `.venv` et installer les packages du fichier requirements via la commande : `pip install -r requirements.txt`
-* Créer un fichier `.env` et copier les variables du fichier `.env.example` dans le fichier `.env` puis compléter les valeurs des variables
-* Ouvrir un terminal et lancer les tests via la commande : `pytest -s`
+## Architecture
 
-## À vous de jouer !
+`
+data/                          # Profil en fichiers Markdown
+ 01_profil_bio.md
+ 02_competences_techniques.md
+ 03_experiences_pro_*.md
+ ...
 
-### 1. Préparation des données
-Pour commencer, vous devez créer plusieurs fichiers Markdown (`.md`) dans le dossier `data`. Chaque fichier doit correspondre à une section de votre profil (Expériences, Projets, Compétences, etc.).
-* **Conseil** : Reprenez les informations de votre portfolio existant.
-* **Structure** : Utilisez des titres clairs (`#`, `##`) pour faciliter le futur découpage (chunking) des documents.
+src/
+ agent.py                   # Agent IA avec Groq
+ app.py                     # Interface Streamlit
+ ingest_data.py            # Ingestion & indexation des données
+`
 
-### 2. Découpage des documents (Chunking)
-Afin que l'IA puisse retrouver précisément l'information, vous devez diviser vos fichiers Markdown en petits morceaux cohérents.
+## Installation locale
 
-### 3. Indexation dans Upstash
-Une fois vos documents découpés, vous devez les envoyer dans votre index Upstash Vector.
-* [Documentation : SDK Python Upstash Vector](https://upstash.com/docs/vector/sdks/py/gettingstarted)
+1. **Clone le repository**
+``ash
+git clone https://github.com/qurnt1/projet-iut-portfolio.git
+cd projet-iut-portfolio
+``
 
-### 4. Création de l'Agent IA
-Développez votre agent en utilisant la bibliothèque `openai-agents`.
-* [Documentation : Introduction aux Agents](https://openai.github.io/openai-agents-python/agents/)
-* [Documentation : Comment lancer un Agent](https://openai.github.io/openai-agents-python/running_agents/)
+2. **Crée un environnement virtuel**
+``ash
+python -m venv venv
+source venv/bin/activate  # Sur Windows: venv\Scripts\activate
+``
 
-### 5. Connexion Agent ↔ Vecteurs (RAG)
-Ajoutez une **Tool** (fonction) à votre agent pour lui permettre d'interroger votre base de données vectorielle lorsqu'une question est posée sur votre profil.
-* [Documentation : Utilisation des Tools](https://openai.github.io/openai-agents-python/tools/)
+3. **Installe les dépendances**
+``ash
+pip install -r requirements.txt
+``
 
-### 6. Interface Utilisateur (Streamlit)
-Créez une interface de chat pour permettre aux utilisateurs d'interagir avec votre agent.
-* [Tutoriel : Créer une application de chat avec Streamlit](https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps)
+4. **Configure les variables d'environnement**
+Crée un fichier .env avec tes clés API Groq et autres configurations nécessaires.
 
-### 7. Déploiement sur Streamlit Cloud
-Une fois votre application fonctionnelle, déployez là sur Streamlit Cloud.
-* [Documentation : Déployer votre application sur Streamlit Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy)
+5. **Lance l'app**
+``ash
+streamlit run src/app.py
+``
 
-## Pour aller plus loin (Bonus)
+## Utilisation
 
-Si vous avez terminé les étapes précédentes et souhaitez enrichir votre projet :
-* **Sauvegarder les conversations** : Utilisez [Upstash Redis](https://upstash.com/docs/redis/overall/getstarted) pour mémoriser l'historique des échanges entre l'utilisateur et l'agent.
-* **Ajouter des nouveaux tools** : Permettez à votre agent d'effectuer d'autres actions (ajout de tools).
+Ouvre l'application et pose des questions sur le profil :
+- "Quelles sont tes compétences techniques ?"
+- "Parle-moi de ton expérience..."
+- "Quels projets as-tu réalisés ?"
 
-## Notes Importantes
+L'agent analyse tes données et répond de manière pertinente et conversationnelle.
 
-* **Streamlit & HTML** : Ne pas insérer de code HTML via Streamlit. Utilisez exclusivement les composants natifs de Streamlit, qui sont largement suffisants pour ce projet. Vous pouvez consulter la liste ici : [API Reference - Streamlit](https://docs.streamlit.io/develop/api-reference).
-* **Clé API OpenAI** : La clé API fournie sera désactivée une fois la correction des projets terminée. Pour continuer à utiliser votre application par la suite, vous devrez utiliser votre propre clé API (il faudra alors créditer son compte [OpenAI](https://openai.com/api/), 10€ devrait être suffisant pendant un moment !).
+## Technologies utilisées
+
+- **Groq** - LLM performant
+- **Streamlit** - Framework web
+- **Upstash Vector** - Base de données vectorielle
+- **Python 3.12+**
+
+##  Liens
+
+- [Application en ligne](https://portfolio-llm-quentin.streamlit.app/)
+- [Repository GitHub](https://github.com/qurnt1/projet-iut-portfolio.git)
