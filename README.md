@@ -6,7 +6,7 @@ Agent conversationnel intelligent construit avec **Groq** pour explorer interact
 
 ## À propos
 
-Ce projet crée une expérience conversationnelle unique où les visiteurs peuvent poser des questions sur vos expériences, compétences et projets. L'agent IA répond intelligemment en puisant dans vos données de profil.
+Ce projet crée une expérience conversationnelle unique où les visiteurs peuvent poser des questions sur les expériences, compétences et projets de Quentin. L'agent IA répond intelligemment en puisant dans vos données de profil.
 
 ## Fonctionnalités
 
@@ -34,19 +34,19 @@ src/
 ## Installation locale
 
 1. **Clone le repository**
-``ash
+``bash
 git clone https://github.com/qurnt1/projet-iut-portfolio.git
 cd projet-iut-portfolio
 ``
 
 2. **Crée un environnement virtuel**
-``ash
+``bash
 python -m venv venv
 source venv/bin/activate  # Sur Windows: venv\Scripts\activate
 ``
 
 3. **Installe les dépendances**
-``ash
+``bash
 pip install -r requirements.txt
 ``
 
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 Crée un fichier .env avec tes clés API Groq et autres configurations nécessaires.
 
 5. **Lance l'app**
-``ash
+``bash
 streamlit run src/app.py
 ``
 
