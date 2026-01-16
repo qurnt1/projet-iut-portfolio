@@ -84,7 +84,7 @@ def render_sidebar():
 
         st.divider()
         st.subheader("État du système")
-        if os.getenv("GROQ_API_KEY"):
+        if os.getenv("openAI_API_KEY"):
             st.success("Agent IA : Prêt")
         else:
             st.error("Clé API manquante")
@@ -132,15 +132,13 @@ def main():
     # Suggestions au démarrage
     if len(st.session_state.messages) == 1 and not show_contact:
         st.caption("Suggestions de questions :")
-        col1, col2, col3, col4 = st.columns(4)
-        if col1.button("🎓 Études", use_container_width=True):
+        col1, col2, col3 = st.columns(3)
+        if col1.button("Parcours académique", use_container_width=True):
             prompt_to_process = "Quel est ton parcours académique ?"
-        if col2.button("💼 Expériences", use_container_width=True):
-            prompt_to_process = "Détaille tes expériences professionnelles techniques (Alternance, Stages et jobs étudiants)."
-        if col3.button("🛠️ Tech", use_container_width=True):
+        if col2.button("Éxpériences professionnelles", use_container_width=True):
+            prompt_to_process = "Détaille tes expériences professionnelles techniques (Alternance et Stage)."
+        if col3.button("Compétences techniques", use_container_width=True):
             prompt_to_process = "Quelles sont tes compétences techniques ?"
-        if col4.button("🧠 Soft Skills", use_container_width=True):
-            prompt_to_process = "Quelles sont tes qualités humaines ?"
 
     # Zone contact
     if show_contact:
