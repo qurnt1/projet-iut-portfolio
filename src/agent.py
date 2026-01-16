@@ -1,64 +1,62 @@
 import os
 import dotenv
-import openai
 from upstash_vector import Index
-from agents import Agent, Runner, function_tool, OpenAIChatCompletionsModel
+from agents import Agent, function_tool, OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
-# 1. Charger les variables d'environnement
 dotenv.load_dotenv()
 
-# 2. Définition de l'outil de recherche sur le portfolio via upstash
 @function_tool
 def search_portfolio(query: str) -> str:
     """
     recherche de l'information dans le portfolio de Quentin Chabot basée sur une requête utilisateur.
     Utilise toujours cet outil lorsque l'utilisateur pose des questions sur les projets, compétences ou parcours.
-    
     Args:
+
         query: La question spécifique ou le sujet à rechercher dans la base de données.
-    """
+
+    """ 
     try:
-        # Connexion à l'index (mêmes credentials que ingest_data)
         index = Index(
             url=os.getenv("UPSTASH_VECTOR_REST_URL"),
             token=os.getenv("UPSTASH_VECTOR_REST_TOKEN")
         )
         
-        # Recherche des 3 chunks les plus pertinents
-        # On passe 'data' directement car l'index gère l'embedding (mode hybride)
         results = index.query(
             data=query, 
-            top_k=int(os.getenv("TOP_K", "3")),
-            include_metadata=True,
+            top_k=6, 
+            include_metadata=True, 
             include_data=True
         )
         
         if not results:
-            return "No relevant information found in the portfolio."
+            return "Aucune information trouvée."
 
-        # Formatage du contexte pour le LLM
-        context_parts = []
+        # Construction d'un contexte plus propre
+        context = []
         for res in results:
-            source = res.metadata.get('source', 'unknown')
-            title = res.metadata.get('title', 'Untitled')
-            content = res.data
-            context_parts.append(f"--- Context from {source} (Section: {title}) ---\n{content}")
+            meta = res.metadata
+            # Ajout explicite du type de section pour aider le LLM à structurer
+            context.append(f"### Source: {meta.get('source')} | Titre: {meta.get('title')}\n{res.data}")
             
-        return "\n\n".join(context_parts)
+        return "\n\n".join(context)
         
     except Exception as e:
-        return f"Error querying database: {str(e)}"
+        return f"Erreur technique: {str(e)}"
 
-# 3. Définition de l'agent
 portfolio_agent = Agent(
     name="Portfolio-Agent",
     instructions=(
-        "Tu es un agent qui réponds aux questions sur le portfolio de Quentin Chabot en répondant en sa personne. "
-        "Tu te bases strictement sur les informations fournies par l'outil 'search_portfolio'. "
-        "Si l'outil ne retourne aucune information, indique clairement que tu ne sais pas."
+        "Tu es Quentin Chabot (via son assistant IA). Ton rôle est d'informer les recruteurs et pairs techniques. "
+        "Ton ton est professionnel, direct, analytique et concis. Pas de politesse excessive. "
+        "Tu as accès à des fragments de mon portfolio via l'outil 'search_portfolio'. "
+        
+        "RÈGLES D'ANALYSE :"
+        "1. Synthétise les informations : Si l'utilisateur demande un CV ou un résumé, combine les chunks (Formation, Expériences, Tech) pour faire une réponse structurée."
+        "2. Ne dis jamais 'D'après les extraits...' ou 'Je ne trouve pas...'. Si une info manque (ex: lycée), ignore-la, concentre-toi sur ce que tu as (Master/Ingénieur)."
+        "3. Si l'information est totalement absente, dis simplement : 'Cette information n'est pas disponible dans ma base actuelle'."
+        "4. Mets en avant la valeur ajoutée (Impact, Stack technique, Résultats)."
     ),
-    # Ajout de l'outil ici
     tools=[search_portfolio],
     model = OpenAIChatCompletionsModel(
         model="openai/gpt-oss-120b",

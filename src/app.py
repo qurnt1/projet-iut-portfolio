@@ -68,6 +68,30 @@ def stream_text(text: str) -> Generator[str, None, None]:
         yield word + " "
         time.sleep(0.02)
 
+def get_cv_button_html() -> str:
+    """Génère le code HTML pour le bouton de téléchargement du CV."""
+    # Mettez le bon chemin vers votre fichier
+    cv_path = "assets/cv_quentin_chabot.pdf" 
+    
+    # Réutilisation de votre style existant
+    btn_style = (
+        "display: inline-flex; align-items: center; justify-content: center; "
+        "background-color: #eee8d1ff; color: #141413; border: 1px solid #E8E6DC; "
+        "border-radius: 8px; padding: 0.6rem 1.2rem; text-decoration: none; "
+        "font-weight: 600; margin-top: 10px;"
+    )
+    
+    # Icône document (optionnel)
+    icon_url = "https://cdn-icons-png.flaticon.com/512/337/337946.png"
+    
+    return f"""
+    <br>
+    <a href="{cv_path}" download="CV_Quentin_Chabot.pdf" target="_blank" style="{btn_style}">
+        <img src="{icon_url}" style="width: 20px; height: 20px; margin-right: 10px;">
+        Télécharger mon CV
+    </a>
+    """
+
 # ============================================================================
 # APPLICATION PRINCIPALE
 # ============================================================================
@@ -101,12 +125,14 @@ def main() -> None:
 
     # --- Affichage de l'historique des messages ---
     for msg in st.session_state.messages:
-        if msg["role"] == "assistant":
-            avatar = BOT_AVATAR if os.path.exists(BOT_AVATAR) else "🤖"
-        else:
-            avatar = USER_AVATAR
+        avatar = (BOT_AVATAR if msg["role"] == "assistant" and os.path.exists(BOT_AVATAR) else "🤖") if msg["role"] == "assistant" else USER_AVATAR
+
         with st.chat_message(msg["role"], avatar=avatar):
-            st.markdown(msg["content"])
+            if msg["role"] == "assistant":
+                st.markdown(msg["content"], unsafe_allow_html=True)  # autorise le bouton CV
+            else:
+                st.markdown(msg["content"])
+
 
     # Variable pour stocker la question à traiter
     prompt_to_process: Optional[str] = None
@@ -194,29 +220,44 @@ def main() -> None:
         avatar_assistant = BOT_AVATAR if os.path.exists(BOT_AVATAR) else "🤖"
         with st.chat_message("assistant", avatar=avatar_assistant):
             placeholder = st.empty()
+            
+            # Variables temporaires
+            text_response: str = ""
+            button_html: str = ""
             full_res: str = ""
 
             with st.spinner("L'agent réfléchit..."):
                 try:
-                    # Appel au backend RAG pour obtenir la réponse
-                    full_res = run_agent_query(prompt_to_process)
+                    # On récupère SEULEMENT le texte de l'agent d'abord
+                    text_response = run_agent_query(prompt_to_process)
+                    
+                    # On prépare le bouton séparément, sans le coller tout de suite
+                    keywords_cv = ["cv", "curriculum", "resume", "télécharger"]
+                    if any(k in prompt_to_process.lower() for k in keywords_cv):
+                        button_html = get_cv_button_html()
+
                 except Exception as e:
-                    full_res = f"Une erreur est survenue : {e}"
+                    text_response = f"Une erreur est survenue : {e}"
 
-            # 3. Affichage progressif (simulation de streaming pour l'UX)
+            # 3. Affichage progressif (simulation de streaming UNIQUEMENT sur le texte)
             temp_text: str = ""
-            for chunk in stream_text(full_res):
+            for chunk in stream_text(text_response):
                 temp_text += chunk
+                # On affiche le texte en cours + curseur
                 placeholder.markdown(temp_text + "▌")
-            placeholder.markdown(full_res)
+            
+            # 4. Assemblage Final : Texte + Bouton (s'il existe)
+            full_res = text_response + button_html
+            
+            # On met à jour le placeholder une dernière fois avec le rendu HTML complet
+            placeholder.markdown(full_res, unsafe_allow_html=True)
 
-            # 4. Sauvegarde dans l'historique
+            # 5. Sauvegarde dans l'historique
             st.session_state.messages.append({"role": "assistant", "content": full_res})
 
         # Délai pour fluidité avant le refresh
         time.sleep(0.2)
         st.rerun()
-
 
 if __name__ == "__main__":
     main()
