@@ -1,51 +1,134 @@
-# rag_backend.py
 import os
 from dotenv import load_dotenv
-from agents import Agent, Runner
 from upstash_vector import Index
+from agents import Agent, Runner, function_tool
 
+# Chargement des variables d'environnement
 load_dotenv()
 
-# Configuration Upstash
+# ================================
+# 1. CONFIGURATION
+# ================================
+
+# Récupération des variables exactes du .env
 UPSTASH_URL = os.getenv("UPSTASH_VECTOR_REST_URL")
 UPSTASH_TOKEN = os.getenv("UPSTASH_VECTOR_REST_TOKEN")
-index = Index(url=UPSTASH_URL, token=UPSTASH_TOKEN)
+CUSTOM_API_KEY = os.getenv("openAI_API_KEY") # Casse spécifique de ton fichier
+MODEL_NAME = os.getenv("MODEL", "gpt-4.1-nano") # Utilise la var, avec fallback
+TOP_K_STR = os.getenv("TOP_K", "3")
 
-def search_portfolio(query: str) -> str:
+# Configuration de la clé API pour la librairie OpenAI
+# La librairie cherche souvent "OPENAI_API_KEY" par défaut, on lui donne donc la tienne
+if CUSTOM_API_KEY:
+    os.environ["OPENAI_API_KEY"] = CUSTOM_API_KEY
+
+# Conversion de TOP_K en entier
+try:
+    TOP_K = int(TOP_K_STR)
+except ValueError:
+    TOP_K = 3 # Valeur par défaut si erreur
+
+# Initialisation du client Upstash
+try:
+    if UPSTASH_URL and UPSTASH_TOKEN:
+        index = Index(url=UPSTASH_URL, token=UPSTASH_TOKEN)
+    else:
+        index = None
+        print("Erreur: Identifiants Upstash manquants dans le .env")
+except Exception as e:
+    print(f"Erreur lors de l'initialisation Upstash : {e}")
+    index = None
+
+# ================================
+# 2. OUTILS (TOOLS)
+# ================================
+
+def check_upstash_connection():
     """
-    Cherche des informations dans le portfolio de Quentin Chabot via la base vectorielle.
-    Utilise cet outil pour répondre aux questions sur le parcours, les projets ou les compétences.
+    Vérifie la connexion à la base de données vectorielle.
+    Utilisé par app.py pour l'affichage du statut.
+    """
+    if not index:
+        return False
+    try:
+        index.info()
+        return True
+    except Exception:
+        return False
+
+@function_tool
+def retrieve_context(query: str) -> str:
+    """
+    Recherche des informations sur Quentin Chabot dans sa base de connaissances (Portfolio, CV).
+    À utiliser obligatoirement pour toute question factuelle sur son profil.
+    
+    Args:
+        query: La question ou les mots-clés pour la recherche vectorielle.
+    Returns:
+        Les extraits de texte pertinents trouvés dans la base.
+    """
+    if not index:
+        return "Erreur: Base de données vectorielle non connectée."
+    
+    try:
+        # Recherche hybride (Keyword + Semantic) utilisant le TOP_K du .env
+        results = index.query(
+            data=query, 
+            top_k=TOP_K, 
+            include_metadata=True,
+            include_data=True
+        )
+        
+        context_parts = []
+        for res in results:
+            text = res.data if res.data else res.metadata.get("text", "")
+            if text:
+                context_parts.append(f"---\n{text}\n---")
+        
+        if not context_parts:
+            return "Aucune information trouvée dans la documentation."
+            
+        return "\n".join(context_parts)
+
+    except Exception as e:
+        return f"Erreur lors de la recherche : {e}"
+
+# ================================
+# 3. DÉFINITION DE L'AGENT
+# ================================
+
+# Création de l'agent
+quentin_agent = Agent(
+    name="Assistant Quentin",
+    model=MODEL_NAME,
+    instructions=(
+        "Tu es l'assistant virtuel professionnel de Quentin Chabot. "
+        "Ton rôle est de répondre aux questions sur son profil (Expériences, Études, Compétences). "
+        "Règles : "
+        "1. Utilise TOUJOURS l'outil 'retrieve_context' pour vérifier les faits avant de répondre. "
+        "2. Si l'info n'est pas dans le contexte, dis que tu ne sais pas. "
+        "3. Sois professionnel et concis."
+    ),
+    tools=[retrieve_context]
+)
+
+# ================================
+# 4. EXÉCUTION (RUNNER)
+# ================================
+
+def run_agent_query(user_query: str) -> str:
+    """
+    Exécute l'agent via le Runner de openai-agents.
     """
     try:
-        res = index.query(
-            data=query,
-            top_k=3,
-            include_metadata=True,
-            include_data=True,
+        # Lancement synchrone de l'agent
+        result = Runner.run_sync(
+            starting_agent=quentin_agent,
+            input=user_query
         )
-        if not res:
-            return "Aucune information pertinente trouvée."
         
-        chunks = [f"- {r.data}" for r in res]
-        return "\n".join(chunks)
+        # On retourne la sortie finale
+        return str(result.final_output)
+
     except Exception as e:
-        return f"Erreur de recherche: {str(e)}"
-
-# Configuration de l'agent
-def get_agent():
-    return Agent(
-        name="Assistant Quentin",
-        instructions=(
-            "Tu es l'assistant professionnel de Quentin Chabot. "
-            "Réponds de manière factuelle et synthétique pour un recruteur. "
-            "Utilise l'outil 'search_portfolio' si la question porte sur le parcours de Quentin. "
-            "Si l'info n'est pas trouvée, dis-le clairement."
-        ),
-        tools=[search_portfolio],  # On passe la fonction directement, la lib gère l'introspection
-        model="llama-3.3-70b-versatile" # Modèle Groq
-    )
-
-def run_agent_query(user_input: str) -> str:
-    agent = get_agent()
-    result = Runner.run_sync(agent, user_input)
-    return result.final_output
+        return f"Erreur lors de l'exécution de l'agent : {e}"

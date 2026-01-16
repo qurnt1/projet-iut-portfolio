@@ -3,8 +3,8 @@ import os
 import time
 import streamlit as st
 from dotenv import load_dotenv
-from upstash_vector import Index
-import requests
+# --- MODIFICATION : Import de check_upstash_connection ---
+from rag_backend import run_agent_query, check_upstash_connection
 
 load_dotenv()
 
@@ -17,6 +17,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# --- AJOUT : Initialisation du statut Upstash au chargement ---
+if "upstash_status" not in st.session_state:
+    st.session_state["upstash_status"] = check_upstash_connection()
 
 USER_AVATAR = "👤"
 BOT_AVATAR = "assets/profile.png"
@@ -31,105 +35,9 @@ ICON_MAIL = "https://cdn-icons-png.flaticon.com/512/732/732200.png"
 ICON_LINKEDIN = "https://cdn-icons-png.flaticon.com/512/3536/3536505.png"
 ICON_GITHUB = "https://cdn-icons-png.flaticon.com/512/733/733553.png"
 
-DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
-GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-
-SYS_PROMPT = (
-    "Tu es l'assistant professionnel de Quentin Chabot.\n"
-    "Objectif : répondre de manière factuelle, synthétique et convaincante pour un recruteur.\n\n"
-    "Règles:\n"
-    "- Si un contexte interne est fourni, utilise-le pour être précis.\n"
-    "- Ne mentionne jamais d'outils, de base vectorielle, de sources techniques, ni de noms de documents.\n"
-    "- Si l'information n'est pas dans le contexte, dis-le clairement et propose une formulation prudente.\n"
-)
-
 # ================================
 # 3. DATA / SERVICES
 # ================================
-
-    
-def initialize_upstash():
-    if "upstash_index" in st.session_state:
-        return
-
-    url = os.getenv("UPSTASH_VECTOR_REST_URL")
-    token = os.getenv("UPSTASH_VECTOR_REST_TOKEN")
-    if not url or not token:
-        st.session_state.upstash_index = None
-        st.session_state.upstash_status = False
-        return
-
-    try:
-        st.session_state.upstash_index = Index(url=url, token=token)
-        # test best-effort
-        try:
-            st.session_state.upstash_index.info()
-        except Exception:
-            pass
-        st.session_state.upstash_status = True
-    except Exception:
-        st.session_state.upstash_index = None
-        st.session_state.upstash_status = False
-
-
-def groq_is_configured() -> bool:
-    return bool(os.getenv("GROQ_API_KEY"))
-
-
-def build_internal_context(query: str, top_k: int = 5) -> str:
-    """
-    Retourne un contexte "interne" à injecter au LLM (sans sources).
-    """
-    index = st.session_state.get("upstash_index")
-    if not index:
-        return ""
-
-    try:
-        res = index.query(
-            data=query,
-            top_k=top_k,
-            include_metadata=True,
-            include_data=True,
-        )
-        if not res:
-            return ""
-
-        # IMPORTANT: on ne met pas les "sources" dans le contexte (réduit le risque de fuite)
-        chunks = []
-        for r in res:
-            txt = (r.data or "").strip()
-            if txt:
-                chunks.append(f"- {txt}")
-
-        return "\n".join(chunks).strip()
-    except Exception:
-        return ""
-
-
-def groq_chat(messages, model: str, temperature: float = 0.3, timeout_s: int = 60) -> str:
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise RuntimeError("GROQ_API_KEY manquante.")
-
-    url = f"{GROQ_BASE_URL}/chat/completions"
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": float(temperature),
-    }
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-
-    r = requests.post(url, json=payload, headers=headers, timeout=timeout_s)
-    if r.status_code != 200:
-        # On remonte le message brut (utile au debug)
-        raise RuntimeError(f"HTTP {r.status_code}: {r.text}")
-
-    data = r.json()
-    return data["choices"][0]["message"]["content"]
-
 
 def stream_text(text: str):
     for word in text.split(" "):
@@ -176,11 +84,10 @@ def render_sidebar():
 
         st.divider()
         st.subheader("État du système")
-
-        if groq_is_configured():
-            st.success("IA (LLM) : Configurée")
+        if os.getenv("GROQ_API_KEY"):
+            st.success("Agent IA : Prêt")
         else:
-            st.error("IA (LLM) : Non configurée")
+            st.error("Clé API manquante")
 
         if st.session_state.get("upstash_status"):
             st.success("Mémoire (Vector DB) : Connectée")
@@ -273,9 +180,6 @@ def main():
     user_input = st.chat_input("Posez votre question ici...", key="chat_input")
     if user_input:
         prompt_to_process = user_input
-
-    # Traitement
-    # ... (le code précédent reste inchangé jusqu'à if prompt_to_process:)
 
     # Traitement
     if prompt_to_process:
