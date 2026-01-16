@@ -13,14 +13,9 @@ load_dotenv()
 # Récupération des variables exactes du .env
 UPSTASH_URL = os.getenv("UPSTASH_VECTOR_REST_URL")
 UPSTASH_TOKEN = os.getenv("UPSTASH_VECTOR_REST_TOKEN")
-CUSTOM_API_KEY = os.getenv("openAI_API_KEY") # Casse spécifique de ton fichier
-MODEL_NAME = os.getenv("MODEL", "gpt-4.1-nano") # Utilise la var, avec fallback
-TOP_K_STR = os.getenv("TOP_K", "3")
-
-# Configuration de la clé API pour la librairie OpenAI
-# La librairie cherche souvent "OPENAI_API_KEY" par défaut, on lui donne donc la tienne
-if CUSTOM_API_KEY:
-    os.environ["OPENAI_API_KEY"] = CUSTOM_API_KEY
+CUSTOM_API_KEY = os.getenv("openAI_API_KEY") 
+MODEL_NAME = os.getenv("MODEL") 
+TOP_K_STR = os.getenv("TOP_K")
 
 # Conversion de TOP_K en entier
 try:
@@ -107,7 +102,7 @@ quentin_agent = Agent(
         "Règles : "
         "1. Utilise TOUJOURS l'outil 'retrieve_context' pour vérifier les faits avant de répondre. "
         "2. Si l'info n'est pas dans le contexte, dis que tu ne sais pas. "
-        "3. Sois professionnel et concis."
+        "3. Sois professionnel et courtois dans tes réponses, donne des réponses complètes et précises."
     ),
     tools=[retrieve_context]
 )
