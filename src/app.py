@@ -159,7 +159,7 @@ def main() -> None:
     if show_contact:
         st.divider()
         st.subheader("Passons au réel")
-        st.info("L'IA c'est bien, l'humain c'est mieux. Retrouvez-moi sur mes canaux professionnels.")
+        st.info("L'IA c'est bien, l'humain c'est mieux, Retrouvez-moi sur mes canaux professionnels.")
 
         c1, c2, c3 = st.columns(3)
 
@@ -205,9 +205,10 @@ def main() -> None:
         st.write("")
 
     # --- Zone de saisie utilisateur ---
-    user_input: Optional[str] = st.chat_input("Posez vos questions ici...", key="chat_input")
-    if user_input:
-        prompt_to_process = user_input
+    if not show_contact:
+        user_input: Optional[str] = st.chat_input("Posez vos questions ici...", key="chat_input")
+        if user_input:
+            prompt_to_process = user_input
 
     # --- Traitement de la question ---
     if prompt_to_process:

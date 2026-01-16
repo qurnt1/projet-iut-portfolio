@@ -10,6 +10,7 @@ index = Index(os.getenv("UPSTASH_VECTOR_REST_URL"), os.getenv("UPSTASH_VECTOR_RE
 
 # Réinitialisation des index déjà existants
 index.reset()
+print("Anciens index supprimés.")
 
 # création de la liste des données à indexer
 vectors = []
