@@ -1,6 +1,8 @@
 import os
 import time
 from typing import Generator, List, Dict, Any, Optional
+import base64
+from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -70,10 +72,21 @@ def stream_text(text: str) -> Generator[str, None, None]:
 
 def get_cv_button_html() -> str:
     """Génère le code HTML pour le bouton de téléchargement du CV."""
-    # Mettez le bon chemin vers votre fichier
-    cv_path = "assets/cv_quentin_chabot.pdf" 
+    cv_path = Path("assets/cv_quentin_chabot.pdf")
     
-    # Réutilisation de votre style existant
+    # Vérifier que le fichier existe
+    if not cv_path.exists():
+        return "<p style='color: red;'>⚠️ Fichier CV introuvable</p>"
+    
+    # Lire et encoder le PDF en base64
+    with open(cv_path, "rb") as f:
+        pdf_bytes = f.read()
+    
+    b64_pdf = base64.b64encode(pdf_bytes).decode()
+    
+    # Créer un data URI
+    href = f"data:application/pdf;base64,{b64_pdf}"
+    
     btn_style = (
         "display: inline-flex; align-items: center; justify-content: center; "
         "background-color: #eee8d1ff; color: #141413; border: 1px solid #E8E6DC; "
@@ -81,12 +94,11 @@ def get_cv_button_html() -> str:
         "font-weight: 600; margin-top: 10px;"
     )
     
-    # Icône document (optionnel)
     icon_url = "https://cdn-icons-png.flaticon.com/512/337/337946.png"
     
     return f"""
     <br>
-    <a href="{cv_path}" download="CV_Quentin_Chabot.pdf" target="_blank" style="{btn_style}">
+    <a href="{href}" download="CV_Quentin_Chabot.pdf" style="{btn_style}">
         <img src="{icon_url}" style="width: 20px; height: 20px; margin-right: 10px;">
         Télécharger mon CV
     </a>
